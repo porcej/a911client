@@ -57,7 +57,7 @@ For the case where the client handles threading
 ```
 
 
-### Sample applicaiton
+### Sample applicaitons
 
 #### sample.py
 
