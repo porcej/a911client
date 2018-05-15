@@ -17,7 +17,7 @@ $pip install -r requirements.txt
 
 ### Usage
 
-## Using this module in your application
+#### Using this module in your application
 
 Import the Active911 class from the a911 module
 ```
@@ -57,9 +57,9 @@ For the case where the client handles threading
 ```
 
 
-## Sample applicaiton
+### Sample applicaiton
 
-# sample.py
+#### sample.py
 
 The sample applicaiton, `sample.py` demonstrates using a911 to pretty print alert data to the screen.  
 
@@ -75,7 +75,7 @@ Options:
 ```
 
 
-# samplefile.py
+#### samplefile.py
 The example applicaiton, `samplefile.py` demonstrates using a911's Active911 class to save alert messages as json files in a predefined directory.
 
 ```
