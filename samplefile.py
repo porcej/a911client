@@ -74,7 +74,7 @@ class Active911Client(Active911):
         Here we handle the alert by saving it to a file in 
         self.output_path
         """
-        with open(os.path.join(self.output_path, alert_ids[1] \
+        with open(os.path.join(self.output_path, alert_id \
             + '.json'), 'w') as jfh:
                 json.dump(alert_data, jfh)
 
