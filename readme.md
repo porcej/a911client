@@ -15,13 +15,6 @@ python >=  3.5
 $pip install -r requirements.txt
 ```
 
-Or you could use Anaconda Python and run `py_env.bat`
-
-```
-$py_env.bat
-```
-
-
 ### Usage
 
 ## Using this module in your application
