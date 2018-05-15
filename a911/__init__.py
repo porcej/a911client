@@ -7,7 +7,7 @@ Elixir and Tonic
 Extends Sleek XMPP's Client XMPP to support Active911.
 
 Changelog:
-	- 2018-05-15 - Initial Commit
+    - 2018-05-15 - Initial Commit
 
 """
 
@@ -121,9 +121,34 @@ class Active911(sleekxmpp.ClientXMPP):
         """
         logging.info(loc['from'] + " new position is " + loc['body'] + ".")
 
+    def run(self, block=True):
+        """
+        Performs connection handling 
+         - If block is true (default), blocks keeps the thread alive
+         		until a disconnect stanza is received or a termination
+         		commaned is issued (<Ctrl> + C)
+         - If block is false  - thread does not block only use this 
+         		if your're handling threading in the client
+
+        """
+        # We wrap the XMPP stuff in a try..finally clause
+        # to force the disconnect method to run if there is any error
+        try:
+            # Connect to the XMPP server and start processing XMPP stanzas.
+            if not self.connect():
+                logging.error("Unable to connect to Active911")
+                sys.exit(1)	# If we can't connect, then why are we here
+
+            self.process(block=block)
+            logging.info("Connected to Active911 via XMPP.")
+            
+        finally:
+            self.disconnect()
+            logging.info("Disconnected from Active911.")
+
 
 if __name__ == '__main__':
-	"""
-	By Default we do nothing.
-	"""
-	None
+    """
+    By Default we do nothing.
+    """
+    None

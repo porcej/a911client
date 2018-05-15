@@ -83,18 +83,19 @@ if __name__ == '__main__':
 
     # xmpp = Active911Client(opts.areg, opts.opath)
     xmpp = Active911Client(opts.areg)
+    xmpp.run()
 
 
     # We wrap the XMPP stuff in a try..finally clause
     # to fource the disconnect method to run if there is any error
-    try:
-        # Connect to the XMPP server and start processing XMPP stanzas.
-        if not xmpp.connect():
-            print('Unable to connect.')
-            sys.exit(1)
+    # try:
+    #     # Connect to the XMPP server and start processing XMPP stanzas.
+    #     if not xmpp.connect():
+    #         print('Unable to connect.')
+    #         sys.exit(1)
 
-        xmpp.process(block=True)
+    #     xmpp.process(block=True)
         
-        print('Done')
-    finally:
-        xmpp.disconnect()
+    #     print('Done')
+    # finally:
+    #     xmpp.disconnect()
