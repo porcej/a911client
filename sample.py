@@ -70,10 +70,7 @@ if __name__ == '__main__':
     optp.add_option("-a", "--aid", dest="areg",
                     help="Active911 Registration ID")
     
-    # Output Path
-    optp.add_option('-p', '--path', help="Output directory",
-                    dest="opath")
-
+    # Parse command line arguments, opts holds values, args holds options
     opts, args = optp.parse_args()
 
     # Setup logging.
@@ -84,13 +81,12 @@ if __name__ == '__main__':
     if opts.areg is None:
          opts.areg = raw_input("A911 Device ID: ")
 
-    if opts.opath is None:
-        opts.opath = raw_input("Output directory: ")
-
     # xmpp = Active911Client(opts.areg, opts.opath)
     xmpp = Active911Client(opts.areg)
 
 
+    # We wrap the XMPP stuff in a try..finally clause
+    # to fource the disconnect method to run if there is any error
     try:
         # Connect to the XMPP server and start processing XMPP stanzas.
         if not xmpp.connect():
