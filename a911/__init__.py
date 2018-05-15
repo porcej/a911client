@@ -19,7 +19,6 @@ __license__ = "MIT"
 __all__ = ['Active911']
 
 
-import os
 import sys
 import logging
 import sleekxmpp
