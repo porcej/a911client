@@ -26,6 +26,11 @@ $py_env.bat
 
 ## Using this module in your application
 
+Import the Active911 class from the a911 module
+```
+from a911 import Active911
+```
+
 Build a child class of `Active911` that overides `Active911.alert(self, alert_id, alert_msg)` to process alerts as needed.
 
 ```
