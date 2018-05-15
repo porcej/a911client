@@ -101,13 +101,14 @@ class Active911(sleekxmpp.ClientXMPP):
             alert_data = alert_msg.json()
             
             logging.info("Message {} received.".format(alert_ids[1]))
-            self.alert(alert_id, alert_data)
+            self.alert(alert_ids[1], alert_data)
 
 
     def alert(self, alert_id, alert_msg):
         """
         This is where we do somehting with the alert.
-        This method should be implamented using the 
+        This method should be implamented by the client
+        to do something with the generated alert
         """
         logging.info("Alert {}:\n\n{}\n".format(alert_id, alert_msg))
 
