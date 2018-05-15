@@ -76,7 +76,7 @@ class Active911Client(Active911):
         """
         with open(os.path.join(self.output_path, alert_id \
             + '.json'), 'w') as jfh:
-                json.dump(alert_data, jfh)
+                json.dump(alert_msg, jfh)
 
 
 if __name__ == '__main__':
