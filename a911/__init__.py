@@ -139,8 +139,9 @@ class Active911(sleekxmpp.ClientXMPP):
                 logging.error("Unable to connect to Active911")
                 sys.exit(1)	# If we can't connect, then why are we here
 
-            self.process(block=block)
             logging.info("Connected to Active911 via XMPP.")
+            self.process(block=block)
+            logging.info("Closing XMPP connection to Active911.")
             
         finally:
             self.disconnect()

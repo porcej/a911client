@@ -59,6 +59,8 @@ For the case where the client handles threading
 
 ## Sample applicaiton
 
+# sample.py
+
 The sample applicaiton, `sample.py` demonstrates using a911 to pretty print alert data to the screen.  
 
 ```
@@ -70,6 +72,23 @@ Options:
   -d, --debug               set logging to DEBUG
   -v, --verbose             set logging to COMM
   -a AREG, --aid=AREG       Active911 Registration ID
+```
+
+
+# samplefile.py
+The example applicaiton, `samplefile.py` demonstrates using a911's Active911 class to save alert messages as json files in a predefined directory.
+
+```
+Usage: samplefile.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -q, --quiet           set logging to ERROR
+  -d, --debug           set logging to DEBUG
+  -v, --verbose         set logging to COMM
+  -a AREG, --aid=AREG   Active911 Registration ID
+  -p OPATH, --path=OPATH
+                        Output directory
 ```
 
 
