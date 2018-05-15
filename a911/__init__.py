@@ -38,7 +38,7 @@ class Active911(sleekxmpp.ClientXMPP):
     session = requests.Session()
 
 
-    def __init__(self, device_code, output_dir):
+    def __init__(self, device_code):
         """
         Initilize the XMPP Client
         """
@@ -57,12 +57,6 @@ class Active911(sleekxmpp.ClientXMPP):
 
         # Initialize for position reporting
         # response = self.session.get(self.api_url + "?&operation=init")
-
-        # Ensure the output directory exists
-        path = Path(output_dir)
-        path.mkdir(parents=True, exist_ok=True)
-
-        self.output_path = output_dir       
 
         
         # JID = "deivce[a91_device_id]@[domain]"
