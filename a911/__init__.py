@@ -8,11 +8,12 @@ Extends Sleek XMPP's Client XMPP to support Active911.
 
 Changelog:
     - 2018-05-15 - Initial Commit
+    - 2018-12-12 - Added sleekmonkey to __init__ to better handle TLS Cert Dates
 
 """
 
 __author__ = "Joseph Porcelli (porcej@gmail.com)"
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 __copyright__ = "Copyright (c) 2018 Joseph Porcelli"
 __license__ = "MIT"
 
@@ -23,41 +24,72 @@ import sys
 import logging
 import sleekxmpp
 import requests
-
+import json
 
 class Active911(sleekxmpp.ClientXMPP):
     """
     A really simple wrapper for Active911
     """
 
-    # Here are out application constants
+    # Here are our application constants
     api_url = "https://access.active911.com/interface/web_api.php"
     domain = "push.active911.com"
 
     session = requests.Session()
 
+    app = None
+    logger = logging
 
-    def __init__(self, device_code):
+
+    def __init__(self, device_code, app=None):
         """
         Initilize the XMPP Client
         """
-        opsResource = "?operation=register&device_code=" 
+
+        # Monkey patch SleekXMMPP to better handle certificate date extrations
+        try:
+            import sleekmonkey
+            sleekmonkey.monkey_patch()
+        except ImportError:
+            pass    # Heres to hopeing SleekXMPP has been fixed
+
+
+
+        if app:
+            self.app = app;
+            self.logger = app.logger
+        else:
+            self.logger = logging
+
+        registerResource = "?operation=register&device_code=" 
 
         # Get the device id and registration infromation for 
         #   device code and set cookie
-        response = self.session.get(self.api_url + opsResource + device_code);
+        response = self.session.get(self.api_url + registerResource + device_code);
+        rjson = json.loads(response.content)
 
+        if rjson['result'] == 'success':
+            self.logger.info("Client registration to Active911 sucessful.")
+
+        elif rjson['result'] == 'Unauthorized':
+            self.logger.error('Client registration to Active911 failed: Unauthorized')
+            raise Exception('Client registration to Active911 failed: Unauthorized')
+
+        else:
+            self.logger.error('Client registration to Active911 failed: ' \
+                + rjson['message'] )
+            raise Exception('Client registration to Active911 failed: ' \
+                + rjson['message'] )
 
         # Added on 2018-04-26 - Check to make sure the cookies
         if ((not 'a91_device_id' in self.session.cookies) and 
                 (not 'a91_registration_code' in self.session.cookies)):
-           logging.error("Invalid Active911 Device ID or bad network connection.")
-           sys.exit("Invalid Active911 Device ID or bad network connection.")
 
-        # Initialize for position reporting
-        # response = self.session.get(self.api_url + "?&operation=init")
+            # We raise an exception rather than quiting to let the app handle the issue
+            self.logger.error("Invalid Active911 Device ID or bad network connection.")
+            raise Exception('Invalid Active911 Device ID or bad network connection')
+            # sys.exit("Invalid Active911 Device ID or bad network connection.")
 
-        
         # JID = "deivce[a91_device_id]@[domain]"
         jid = "device" + self.session.cookies['a91_device_id'] + "@" + self.domain
         password = self.session.cookies['a91_registration_code']
@@ -71,10 +103,14 @@ class Active911(sleekxmpp.ClientXMPP):
         self.register_plugin('xep_0060') # PubSub
         self.register_plugin('xep_0199') # XMPP Ping
 
-        # Add handler for starting XMPP sessions and parsing incoming messages
+        # Starting XMPP sessions
         self.add_event_handler("session_start", self.start)
+        # Parse incoming messages
         self.add_event_handler("message", self.message)
+        # Discard Position Information
         self.add_event_handler("position", self.position)   # Need to run api->init first
+        # Discard SSL Errors
+        self.add_event_handler("ssl_invalid_cert", self.discard)
 
     def start(self, event):
         """
@@ -84,7 +120,7 @@ class Active911(sleekxmpp.ClientXMPP):
         self.send_presence()
         # We don't care about a contact list so we skip fetching a roster
         # self.get_roster()
-        logging.info("XMPP Session started...")
+        self.logger.info("XMPP Session started...")
 
 
     def message(self, msg):
@@ -100,8 +136,38 @@ class Active911(sleekxmpp.ClientXMPP):
                     (self.api_url, alert_ids[1], alert_ids[2]))
             alert_data = alert_msg.json()
             
-            logging.info("Message {} received.".format(alert_ids[1]))
+            self.logger.info("Message {} received.".format(alert_ids[1]))
             self.alert(alert_ids[1], alert_data)
+
+    def initialize(self):
+        """
+        Here we download last 10 A911 alerts
+        we may do other stuff here later
+        """
+        # Initialize for position reporting
+        response = self.session.get(self.api_url + "?&operation=init")
+        data = json.loads(response.content)
+
+        if data['result'] == 'success':
+            self.logger.info("Active911 sucessfully initilized.")
+            alerts = data['message']['alerts']
+            for idx, alert in enumerate(alerts):
+                alert_response = {'result': 'success', \
+                                    'message': alert, \
+                                    'init': True}
+                with self.app.app_context():
+                    self.alert(idx, alert_response)
+
+
+        elif data['result'] == 'Unauthorized':
+            self.logger.error('Client initilization to Active911 failed: Unauthorized')
+            raise Exception('Client initilization to Active911 failed: Unauthorized')
+
+        else:
+            self.logger.error('Client initilization to Active911 failed: ' \
+                + data['message'] )
+            raise Exception('Client initilization to Active911 failed: ' \
+                + data['message'] )
 
 
     def alert(self, alert_id, alert_msg):
@@ -110,7 +176,7 @@ class Active911(sleekxmpp.ClientXMPP):
         This method should be implamented by the client
         to do something with the generated alert
         """
-        logging.info("Alert {}:\n\n{}\n".format(alert_id, alert_msg))
+        self.logger.info("Alert {}:\n\n{}\n".format(alert_id, alert_msg))
 
 
 
@@ -119,16 +185,22 @@ class Active911(sleekxmpp.ClientXMPP):
         This is where we process position information... big hint...
             we don't actually do anything here
         """
-        logging.info(loc['from'] + " new position is " + loc['body'] + ".")
+        self.logger.info(loc['from'] + " new position is " + loc['body'] + ".")
+
+    def discard(self, event):
+        """
+        This does nothing.  This can be called for events that we don't care about.
+        """
+        return
 
     def run(self, block=True):
         """
         Performs connection handling 
          - If block is true (default), blocks keeps the thread alive
-         		until a disconnect stanza is received or a termination
-         		commaned is issued (<Ctrl> + C)
+                until a disconnect stanza is received or a termination
+                commaned is issued (<Ctrl> + C)
          - If block is false  - thread does not block only use this 
-         		if your're handling threading in the client
+                if your're handling threading in the client
 
         """
         # We wrap the XMPP stuff in a try..finally clause
@@ -136,16 +208,16 @@ class Active911(sleekxmpp.ClientXMPP):
         try:
             # Connect to the XMPP server and start processing XMPP stanzas.
             if not self.connect():
-                logging.error("Unable to connect to Active911")
-                sys.exit(1)	# If we can't connect, then why are we here
+                self.logger.error("Unable to connect to Active911")
+                sys.exit(1) # If we can't connect, then why are we here
 
-            logging.info("Connected to Active911 via XMPP.")
+            self.logger.info("Connected to Active911 via XMPP.")
             self.process(block=block)
-            logging.info("Closing XMPP connection to Active911.")
+            self.logger.info("Closing XMPP connection to Active911.")
             
         finally:
             self.disconnect()
-            logging.info("Disconnected from Active911.")
+            self.logger.info("Disconnected from Active911.")
 
 
 if __name__ == '__main__':
