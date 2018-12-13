@@ -8,11 +8,40 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-This module is designed to work with `Python >=3.5`.  `Python 2` may work, your milage may very.  The `requirements.txt` file contains the required libraries.  
+This module is designed to work with `Python 3.4+`.  `Python 2` may work, your milage may very.  The `requirements.txt` file contains the required libraries.  
 
 ```
-python >=  3.5
+python3.4+
 $pip install -r requirements.txt
+```
+
+### Optional Prerequisites
+
+This module optionally, works with [sleekmonkey](https://github.com/porcej/sleekmonkey).  A Monkey Patch for SleekXMPP to better handle TLS certificate date validation.
+
+To install [sleekmonkey](https://github.com/porcej/sleekmonkey):
+```
+$ git clone http://github.com/porcej/sleekmonkey
+$ cd sleekmonkey
+$ python3 setup.py install
+```
+
+
+### Installation
+
+This package can be installed from github:
+
+```
+$ git clone http://github.com/porcej/a911client
+$ cd a911client
+$ python3 setup.py install
+```
+
+### Removal
+
+
+```
+$ pip uninstall a911
 ```
 
 ### Usage
