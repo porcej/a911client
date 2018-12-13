@@ -36,7 +36,7 @@ CLASSIFIERS      = [ 'Intended Audience :: Developers',
                      'Topic :: Software Development :: Libraries :: Python Modules',
                    ]
 
-packages     = [ 'sleekmonkey']
+packages     = [ 'a911' ]
 
 setup(
     name             = "a911",
@@ -49,15 +49,6 @@ setup(
     license      = 'MIT',
     platforms    = [ 'any' ],
     packages     = packages,
-    requires     = [ 'sleekxmpp',
-                     'certifi',
-                     'chardet',
-                     'dnspython',
-                     'idna',
-                     'pyasn1',
-                     'pyasn1-modules',
-                     'requests',
-                     'urllib3' 
-                     ]
+    requires     = [ 'sleekxmpp', 'requests' ],
     classifiers  = CLASSIFIERS
 )
