@@ -39,7 +39,7 @@ CLASSIFIERS      = [ 'Intended Audience :: Developers',
 packages     = [ 'sleekmonkey']
 
 setup(
-    name             = "sleekmonkey",
+    name             = "a911",
     version          = VERSION,
     description      = DESCRIPTION,
     long_description = LONG_DESCRIPTION,
@@ -57,6 +57,7 @@ setup(
                      'pyasn1',
                      'pyasn1-modules',
                      'requests',
-                     'urllib3'],
+                     'urllib3' 
+                     ]
     classifiers  = CLASSIFIERS
 )
