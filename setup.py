@@ -10,6 +10,8 @@ file, which you should have received as part of this distribution.
 
 Changelog:
     - 2018-12-12 - Initial Commit
+    - 2019-02-27 - Fixed several typos
+    - 2019-02-27 - Changes requires to install_requires
 """
 
 import sys
@@ -34,19 +36,19 @@ CLASSIFIERS      = [ 'Intended Audience :: Developers',
                      'Programming Language :: Python :: 3.5',
                      'Programming Language :: Python :: 3.6',
                      'Programming Language :: Python :: 3.7',
-                     'Topic :: Software Development :: Libraries :: Python Modules',
+                     'Topic :: Software Development :: Libraries :: Python Modules'
                    ]
 
-REQUIREMENTS     = [ 'certifi==2018.4.16',
-                     'chardet==3.0.4',
-                     'dnspython==1.15.0',
-                     'idna==2.6',
-                     'pyasn1==0.3.6',
-                     'pyasn1-modules==0.1.5',
-                     'requests==2.21.0',
-                     'sleekxmpp==1.3.3',
+REQUIREMENTS     = [ 'certifi',
+                     'chardet',
+                     'dnspython',
+                     'idna',
+                     'pyasn1',
+                     'pyasn1-modules',
+                     'requests',
+                     'sleekxmpp',
+                     'urllib3'
                     ]
-urllib3==1.22']
 
 packages     = [ 'a911' ]
 
@@ -55,13 +57,13 @@ setup(
     version          = VERSION,
     description      = DESCRIPTION,
     long_description = LONG_DESCRIPTION,
-    long_description_content_type = 'text/markdown'
+    long_description_content_type = 'text/markdown',
     author       = 'Joe Porcelli',
     author_email = 'joe@kt3i.com',
     url          = 'http://github.com/porcej/a911client',
     license      = 'MIT',
     platforms    = [ 'any' ],
     packages     = packages,
-    requires     = REQUIREMENTS,
+    install_requires     = REQUIREMENTS,
     classifiers  = CLASSIFIERS
 )
