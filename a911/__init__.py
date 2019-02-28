@@ -7,13 +7,16 @@ Elixir and Tonic
 Extends Sleek XMPP's Client XMPP to support Active911.
 
 Changelog:
-    - 2018-05-15 - Initial Commit
-    - 2018-12-12 - Added sleekmonkey to __init__ to better handle TLS Cert Dates
+    - 2018-05-15 -  Initial Commit
+    - 2018-12-12 -  Added sleekmonkey to __init__ to better handle 
+                    TLS Cert Dates
+    - 2019-02-28 -  Replaced response.content with response.text 
+                    to support legacy json implamentations
 
 """
 
 __author__ = "Joseph Porcelli (porcej@gmail.com)"
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __copyright__ = "Copyright (c) 2018 Joseph Porcelli"
 __license__ = "MIT"
 
@@ -66,7 +69,7 @@ class Active911(sleekxmpp.ClientXMPP):
         # Get the device id and registration infromation for 
         #   device code and set cookie
         response = self.session.get(self.api_url + registerResource + device_code);
-        rjson = json.loads(response.content)
+        rjson = json.loads(response.text)
 
         if rjson['result'] == 'success':
             self.logger.info("Client registration to Active911 sucessful.")
@@ -146,7 +149,7 @@ class Active911(sleekxmpp.ClientXMPP):
         """
         # Initialize for position reporting
         response = self.session.get(self.api_url + "?&operation=init")
-        data = json.loads(response.content)
+        data = json.loads(response.text)
 
         if data['result'] == 'success':
             self.logger.info("Active911 sucessfully initilized.")
