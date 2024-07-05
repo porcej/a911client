@@ -4,7 +4,7 @@
 """
 Active911 Python
 Elixir and Tonic
-Extends Sleek XMPP's Client XMPP to support Active911.
+Extends SliXMPP's ClientXMPP to support Active911.
 
 Changelog:
     - 2018-05-15 -  Initial Commit
@@ -12,12 +12,13 @@ Changelog:
                     TLS Cert Dates
     - 2019-02-28 -  Replaced response.content with response.text 
                     to support legacy json implamentations
+    - 2025-07095 -  Migrated from SleekXMPP to SliXMPP
 
 """
 
 __author__ = "Joseph Porcelli (porcej@gmail.com)"
-__version__ = "0.0.3"
-__copyright__ = "Copyright (c) 2018 Joseph Porcelli"
+__version__ = "0.1.1"
+__copyright__ = "Copyright (c) 2024 Joseph Porcelli"
 __license__ = "MIT"
 
 __all__ = ['Active911']
@@ -25,19 +26,15 @@ __all__ = ['Active911']
 
 import sys
 import logging
-import sleekxmpp
 import requests
 import json
+from slixmpp import ClientXMPP
+from ActiveAlert.ActiveConfig import Active911Config
 
-class Active911(sleekxmpp.ClientXMPP):
+class Active911(ClientXMPP):
     """
     A really simple wrapper for Active911
     """
-
-    # Here are our application constants
-    api_url = "https://access.active911.com/interface/web_api.php"
-    domain = "push.active911.com"
-
     session = requests.Session()
 
     app = None
@@ -46,29 +43,28 @@ class Active911(sleekxmpp.ClientXMPP):
 
     def __init__(self, device_code, app=None):
         """
-        Initilize the XMPP Client
+        Initializes the XMPP client.
+
+        Parameters:
+        -----------
+        device_code : str
+            Active911 Device Dode.
+        app : Object
+            Application class to run under or None
         """
 
-        # Monkey patch SleekXMMPP to better handle certificate date extrations
-        try:
-            import sleekmonkey
-            sleekmonkey.monkey_patch()
-        except ImportError:
-            pass    # Heres to hopeing SleekXMPP has been fixed
-
-
-
+        # Add logging
         if app:
             self.app = app;
             self.logger = app.logger
         else:
             self.logger = logging
 
-        registerResource = "?operation=register&device_code=" 
 
         # Get the device id and registration infromation for 
         #   device code and set cookie
-        response = self.session.get(self.api_url + registerResource + device_code);
+        # response = self.session.get(f'{Active911Config.register_url}{device_code}');
+        response = self.session.get(Active911Config.register_url(device_code))
         rjson = json.loads(response.text)
 
         if rjson['result'] == 'success':
@@ -94,10 +90,11 @@ class Active911(sleekxmpp.ClientXMPP):
             # sys.exit("Invalid Active911 Device ID or bad network connection.")
 
         # JID = "deivce[a91_device_id]@[domain]"
-        jid = "device" + self.session.cookies['a91_device_id'] + "@" + self.domain
+        jid = "device" + self.session.cookies['a91_device_id'] + "@" + Active911Config.xmpp_domain
         password = self.session.cookies['a91_registration_code']
 
-        sleekxmpp.ClientXMPP.__init__(self, jid, password)
+        ClientXMPP.__init__(self, jid, password)
+
 
         self['feature_mechanisms'].unencrypted_plain = True
 
@@ -115,20 +112,30 @@ class Active911(sleekxmpp.ClientXMPP):
         # Discard SSL Errors
         self.add_event_handler("ssl_invalid_cert", self.discard)
 
-    def start(self, event):
+    async def start(self, event):
         """
-        All we want to do  is start... but to be sure everything
-        is working correctly, we will send an empty presnce stanza
+        Handles session start event, sets presence, gets roster, and joins a conference room.
+
+        Parameters:
+        -----------
+        event : dict
+            The event data.
         """
+
         self.send_presence()
         # We don't care about a contact list so we skip fetching a roster
-        # self.get_roster()
+        # await self.get_roster()
         self.logger.info("XMPP Session started...")
 
 
     def message(self, msg):
         """
-        This is where we process incoming message stanzas
+        Handles incoming messages and replies with a thank-you message.
+
+        Parameters:
+        -----------
+        msg : Message
+            The incoming message object.
         """
         if msg['type'] in ('chat', 'normal'):
             alert_ids = msg['body'].split(':')
@@ -136,7 +143,7 @@ class Active911(sleekxmpp.ClientXMPP):
             # Reguest alert from Web API
             alert_msg = self.session.get(
                 "%s?operation=fetch_alert&message_id=%s&_=%s" %
-                    (self.api_url, alert_ids[1], alert_ids[2]))
+                    (Active911Config.access_uri, alert_ids[1], alert_ids[2]))
             alert_data = alert_msg.json()
             
             self.logger.info("Message {} received.".format(alert_ids[1]))
@@ -148,7 +155,7 @@ class Active911(sleekxmpp.ClientXMPP):
         we may do other stuff here later
         """
         # Initialize for position reporting
-        response = self.session.get(self.api_url + "?&operation=init")
+        response = self.session.get(Active911Config.access_uri + "?&operation=init")
         data = json.loads(response.text)
 
         if data['result'] == 'success':
@@ -210,12 +217,13 @@ class Active911(sleekxmpp.ClientXMPP):
         # to force the disconnect method to run if there is any error
         try:
             # Connect to the XMPP server and start processing XMPP stanzas.
-            if not self.connect():
-                self.logger.error("Unable to connect to Active911")
-                sys.exit(1) # If we can't connect, then why are we here
+            self.connect(address=(Active911Config.xmpp_server, Active911Config.xmpp_port))
+            # if not self.connect(address=(Active911Config.xmpp_server, Active911Config.xmpp_port)):
+            #     self.logger.error("Unable to connect to Active911")
+            #     sys.exit(1) # If we can't connect, then why are we here
 
             self.logger.info("Connected to Active911 via XMPP.")
-            self.process(block=block)
+            self.process(forever=True)
             self.logger.info("Closing XMPP connection to Active911.")
             
         finally:
