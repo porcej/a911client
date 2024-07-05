@@ -21,7 +21,7 @@ try:
 except ImportError:
     from distutils.core import setup, Command
 
-from a911 import __version__
+from ActiveAlert import __version__
 
 VERSION          = __version__
 DESCRIPTION      = 'A tiny Python client for Active911 alert messages.'
