@@ -46,7 +46,7 @@ REQUIREMENTS     = [ 'certifi',
                      'pyasn1',
                      'pyasn1-modules',
                      'requests',
-                     'sleekxmpp',
+                     'slixmmp',
                      'urllib3'
                     ]
 
