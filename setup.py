@@ -39,18 +39,13 @@ CLASSIFIERS      = [ 'Intended Audience :: Developers',
                      'Topic :: Software Development :: Libraries :: Python Modules'
                    ]
 
-REQUIREMENTS     = [ 'certifi',
-                     'chardet',
-                     'dnspython',
-                     'idna',
-                     'pyasn1',
-                     'pyasn1-modules',
+REQUIREMENTS     = [
                      'requests',
-                     'slixmmp',
-                     'urllib3'
+                     'slixmpp',
+                     'urllib3',
                     ]
 
-packages     = [ 'a911' ]
+packages     = [ 'ActiveAlert' ]
 
 setup(
     name             = "a911",
@@ -65,5 +60,6 @@ setup(
     platforms    = [ 'any' ],
     packages     = packages,
     install_requires     = REQUIREMENTS,
+    setup_requires = REQUIREMENTS,
     classifiers  = CLASSIFIERS
 )
