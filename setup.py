@@ -14,28 +14,20 @@ Changelog:
     - 2019-02-27 - Changes requires to install_requires
 """
 
-import sys
-import codecs
-try:
-    from setuptools import setup, Command
-except ImportError:
-    from distutils.core import setup, Command
+from setuptools import setup, find_packages
 
-from ActiveAlert import __version__
+from a911client import __version__
 
 VERSION          = __version__
 DESCRIPTION      = 'A tiny Python client for Active911 alert messages.'
-with codecs.open('README.md', 'r', encoding='UTF-8') as readme:
-    LONG_DESCRIPTION = ''.join(readme)
+# with codecs.open('README.md', 'r', encoding='UTF-8') as readme:
+#     LONG_DESCRIPTION = ''.join(readme)
 
 CLASSIFIERS      = [ 'Intended Audience :: Developers',
                      'License :: OSI Approved :: MIT License',
                      'Programming Language :: Python',
-                     'Programming Language :: Python :: 2.7',
-                     'Programming Language :: Python :: 3.4',
-                     'Programming Language :: Python :: 3.5',
-                     'Programming Language :: Python :: 3.6',
-                     'Programming Language :: Python :: 3.7',
+                     'Programming Language :: Python :: 3',
+                     'Operating System :: OS Independent',
                      'Topic :: Software Development :: Libraries :: Python Modules'
                    ]
 
@@ -44,22 +36,24 @@ REQUIREMENTS     = [
                      'slixmpp',
                      'urllib3',
                     ]
+SETUP_REQUIREMENTS = []
 
-packages     = [ 'ActiveAlert' ]
+# packages     = [ 'A911Client' ]
 
 setup(
-    name             = "a911",
+    name             = "a911client",
     version          = VERSION,
     description      = DESCRIPTION,
-    long_description = LONG_DESCRIPTION,
+    long_description = open('README.md').read(),
     long_description_content_type = 'text/markdown',
     author       = 'Joe Porcelli',
     author_email = 'joe@kt3i.com',
     url          = 'http://github.com/porcej/a911client',
     license      = 'MIT',
     platforms    = [ 'any' ],
-    packages     = packages,
+    packages     = find_packages(),
     install_requires     = REQUIREMENTS,
-    setup_requires = REQUIREMENTS,
-    classifiers  = CLASSIFIERS
+    setup_requires = SETUP_REQUIREMENTS,
+    classifiers  = CLASSIFIERS,
+    python_requires='>=3.6',
 )
