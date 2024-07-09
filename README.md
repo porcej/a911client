@@ -8,11 +8,10 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-This module is designed to work with `Python 3.4+`.  `Python 2` may work, your milage may very.  The `requirements.txt` file contains the required libraries.  
+This module is designed to work with `Python 3.6+`.  `Python 2` may work, your milage may very.  The `requirements.txt` file contains the required libraries.  
 
 ```
-python3.4+
-$pip install -r requirements.txt
+python3.6+
 ```
 
 ### Optional Prerequisites
@@ -32,16 +31,14 @@ $ python3 setup.py install
 This package can be installed from github:
 
 ```
-$ git clone http://github.com/porcej/a911client
-$ cd a911client
-$ python3 setup.py install
+$ pip install git+https://github.com/porcej/a911client
 ```
 
 ### Removal
 
 
 ```
-$ pip uninstall a911
+$ pip uninstall a911client
 ```
 
 ### Usage
@@ -123,8 +120,8 @@ Options:
 
 ## Built With
 
-* [Anaconda Python](https://conda.io/) - The python framework
-* [SleekXMPP](https://github.com/fritzy/SleekXMPP) - XMPP Library
+* [wheel](https://wheel.readthedocs.io/en/stable/) - The python framework
+* [Slixmpp](https://slixmpp.readthedocs.io/en/latest/) - XMPP Library
 * [Requests](http://docs.python-requests.org/en/master/) - Request and session handling
 
 ## Contributing
@@ -133,13 +130,13 @@ Please read [CONTRIBUTING.md](https://gist.github.com/porcej/cc71497a2b455f27bca
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/porcej/a911_bridge/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/porcej/a911client/tags). 
 
 ## Authors
 
 * **Joseph Porcelli** - *Initial work* - [porcej](https://github.com/porcej)
 
-See also the list of [contributors](https://github.com/porcej/a911_bridge/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/porcej/a911client/contributors) who participated in this project.
 
 ## License
 
