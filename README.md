@@ -12,19 +12,11 @@ This module is designed to work with `Python 3.6+`.  `Python 2` may work, your m
 
 ```
 python3.6+
+
+# Setup Requirements
+$ pip install setuptools wheel
+$ pip install -r requirements.txt 
 ```
-
-### Optional Prerequisites
-
-This module optionally, works with [sleekmonkey](https://github.com/porcej/sleekmonkey).  A Monkey Patch for SleekXMPP to better handle TLS certificate date validation.
-
-To install [sleekmonkey](https://github.com/porcej/sleekmonkey):
-```
-$ git clone http://github.com/porcej/sleekmonkey
-$ cd sleekmonkey
-$ python3 setup.py install
-```
-
 
 ### Installation
 
