@@ -24,5 +24,5 @@ __license__ = "MIT"
 __all__ = ['Active911']
 
 
-from ActiveAlert.active import Active911
-from ActiveAlert.ActiveConfig import Active911Config
+from a911client.active import Active911
+from a911client.ActiveConfig import Active911Config

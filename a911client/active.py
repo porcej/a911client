@@ -29,7 +29,7 @@ import logging
 import requests
 import json
 from slixmpp import ClientXMPP
-from ActiveAlert.ActiveConfig import Active911Config
+from a911client.ActiveConfig import Active911Config
 
 class Active911(ClientXMPP):
     """
