@@ -123,8 +123,8 @@ class Active911(ClientXMPP):
         """
 
         self.send_presence()
-        # We don't care about a contact list so we skip fetching a roster
-        # await self.get_roster()
+        # Active911 does not provide a roster
+        # await self.get_roster(). 
         self.logger.info("XMPP Session started...")
 
 
