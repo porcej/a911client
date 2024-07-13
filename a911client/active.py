@@ -177,8 +177,8 @@ class Active911(ClientXMPP):
                 alert_response = {'result': 'success', \
                                     'message': alert, \
                                     'init': True}
-                with self.app.app_context():
-                    self.alert(idx, alert_response)
+                
+                self.alert(idx, alert_response)
 
 
         elif data['result'] == 'Unauthorized':
