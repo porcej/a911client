@@ -24,10 +24,11 @@ __license__ = "MIT"
 __all__ = ['Active911']
 
 
-import sys
+import asyncio
+import json
 import logging
 import requests
-import json
+import sys
 from slixmpp import ClientXMPP
 from a911client.ActiveConfig import Active911Config
 
@@ -93,7 +94,18 @@ class Active911(ClientXMPP):
         jid = "device" + self.session.cookies['a91_device_id'] + "@" + Active911Config.xmpp_domain
         password = self.session.cookies['a91_registration_code']
 
-        ClientXMPP.__init__(self, jid, password)
+
+        # Check the thread for an eventloop, if there is not one, create one
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError as e:
+            if str(e).startswith('There is no current event loop in thread'):
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            else:
+                raise
+
+        super().__init__(jid, password)
 
 
         self['feature_mechanisms'].unencrypted_plain = True
@@ -128,7 +140,7 @@ class Active911(ClientXMPP):
         self.logger.info("XMPP Session started...")
 
 
-    def message(self, msg):
+    async def message(self, msg):
         """
         Handles incoming messages and replies with a thank-you message.
 
