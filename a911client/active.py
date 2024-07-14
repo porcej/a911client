@@ -171,7 +171,7 @@ class Active911(ClientXMPP):
         data = json.loads(response.text)
 
         if data['result'] == 'success':
-            self.logger.info("Active911 sucessfully initilized.")
+            self.logger.info("Active911 initilized.")
             alerts = data['message']['alerts']
             for idx, alert in enumerate(alerts):
                 alert_response = {'result': 'success', \
@@ -179,17 +179,9 @@ class Active911(ClientXMPP):
                                     'init': True}
                 
                 self.alert(idx, alert_response)
-
-
-        elif data['result'] == 'Unauthorized':
-            self.logger.error('Client initilization to Active911 failed: Unauthorized')
-            raise Exception('Client initilization to Active911 failed: Unauthorized')
-
         else:
-            self.logger.error('Client initilization to Active911 failed: ' \
-                + data['message'] )
-            raise Exception('Client initilization to Active911 failed: ' \
-                + data['message'] )
+            self.logger.error(f'Client initilization to Active911 failed: {data["result"]} - {data["message"]}')
+            raise Exception(f'Client initilization to Active911 failed: {data["result"]} - {data["message"]}')
 
 
     def alert(self, alert_id, alert_msg):
