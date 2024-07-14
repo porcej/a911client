@@ -167,7 +167,7 @@ class Active911(ClientXMPP):
         we may do other stuff here later
         """
         # Initialize for position reporting
-        response = self.session.get(Active911Config.access_uri + "?&operation=init")
+        response = self.session.get(Active911Config.initialization_uri() )
         data = json.loads(response.text)
 
         if data['result'] == 'success':

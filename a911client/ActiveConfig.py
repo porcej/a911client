@@ -43,6 +43,7 @@ class Active911Config:
     reload_at_hour = 2
     region_code = ""
     mixpanel_token = "2e3710ffc695cdb34dac95bcc07148d1"
+    init_resource = "?&operation=init"
     # register_url = f'{access_uri}{register_resource}'
 
     @staticmethod
@@ -58,11 +59,22 @@ class Active911Config:
         """
         return f'{Active911Config.access_uri}{Active911Config.register_resource}{device_code}'
 
-    def xmpp_uri(self) -> str:
+    @staticmethod
+    def xmpp_uri() -> str:
         """
         Returns a string representing the XMPP Connect URI
 
         Returns:
             str: XMPP Connect URI
         """
-        return f'{self.xmpp_protocol}://{self.xmpp_server}:{self.xmpp_port}/{self.xmpp_resource}'
+        return f'{Active911Config.xmpp_protocol}://{Active911Config.xmpp_server}:{Active911Config.xmpp_port}/{Active911Config.xmpp_resource}'
+
+    @staticmethod
+    def initialization_uri() -> str:
+        """
+        Returns a string representing the ActiveAlert Initilization URL
+
+        Returns:
+            (str): Active Alert Intilization URI
+        """
+        return f'{Active911Config.access_uri}{Active911Config.init_resource}'
