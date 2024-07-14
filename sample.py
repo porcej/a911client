@@ -83,6 +83,7 @@ if __name__ == '__main__':
 
     # xmpp = Active911Client(opts.areg, opts.opath)
     xmpp = Active911Client(opts.areg)
+    xmpp.initialize()
     xmpp.run()
 
 
