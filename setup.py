@@ -36,7 +36,7 @@ REQUIREMENTS     = [
                      'slixmpp',
                      'urllib3',
                     ]
-SETUP_REQUIREMENTS = []
+SETUP_REQUIREMENTS = ['requests']
 
 # packages     = [ 'A911Client' ]
 
