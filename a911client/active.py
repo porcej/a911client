@@ -172,13 +172,6 @@ class Active911(ClientXMPP):
         loop = asyncio.get_event_loop()
         try:
             self.connect(address=(Active911Config.xmpp_server, Active911Config.xmpp_port))
-            # asyncio.get_event_loop().run_forever()
-            # connected = loop.run_until_complete(
-            #     self.connect(address=(Active911Config.xmpp_server, Active911Config.xmpp_port))
-            # )
-            # if not connected:
-            #     self.logger.error("Unable to connect to Active911")
-            #     sys.exit(1)
             self.logger.info("Connected to Active911 via XMPP.")
             # Run the event loop indefinitely.
             loop.run_forever()
