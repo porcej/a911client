@@ -12,8 +12,7 @@ Changelog:
                     TLS Cert Dates
     - 2019-02-28 -  Replaced response.content with response.text 
                     to support legacy json implamentations
-    - 2025-07095 -  Migrated from SleekXMPP to SliXMPP
-
+    - 2025-03-24 - Migrated from SleekXMPP to Slixmpp and updated run method for asyncio
 """
 
 __author__ = "Joseph Porcelli (porcej@gmail.com)"
@@ -34,13 +33,11 @@ from a911client.ActiveConfig import Active911Config
 
 class Active911(ClientXMPP):
     """
-    A really simple wrapper for Active911
+    A really simple wrapper for Active911.
     """
     session = requests.Session()
-
     app = None
     logger = logging
-
 
     def __init__(self, device_code, app=None):
         """
@@ -49,53 +46,40 @@ class Active911(ClientXMPP):
         Parameters:
         -----------
         device_code : str
-            Active911 Device Dode.
+            Active911 Device Code.
         app : Object
-            Application class to run under or None
+            Application class to run under or None.
         """
-
-        # Add logging
         if app:
-            self.app = app;
+            self.app = app
             self.logger = app.logger
         else:
             self.logger = logging
 
-
-        # Get the device id and registration infromation for 
-        #   device code and set cookie
-        # response = self.session.get(f'{Active911Config.register_url}{device_code}');
+        # Get the device id and registration information and set cookie.
         response = self.session.get(Active911Config.register_url(device_code))
         rjson = json.loads(response.text)
 
         if rjson['result'] == 'success':
-            self.logger.info("Client registration to Active911 sucessful.")
-
+            self.logger.info("Client registration to Active911 successful.")
         elif rjson['result'] == 'Unauthorized':
             self.logger.error('Client registration to Active911 failed: Unauthorized')
             raise Exception('Client registration to Active911 failed: Unauthorized')
-
         else:
-            self.logger.error('Client registration to Active911 failed: ' \
-                + rjson['message'] )
-            raise Exception('Client registration to Active911 failed: ' \
-                + rjson['message'] )
+            self.logger.error('Client registration to Active911 failed: ' + rjson['message'])
+            raise Exception('Client registration to Active911 failed: ' + rjson['message'])
 
-        # Added on 2018-04-26 - Check to make sure the cookies
-        if ((not 'a91_device_id' in self.session.cookies) and 
-                (not 'a91_registration_code' in self.session.cookies)):
-
-            # We raise an exception rather than quiting to let the app handle the issue
+        # Check that the required cookies were set.
+        if (('a91_device_id' not in self.session.cookies) or 
+            ('a91_registration_code' not in self.session.cookies)):
             self.logger.error("Invalid Active911 Device ID or bad network connection.")
             raise Exception('Invalid Active911 Device ID or bad network connection')
-            # sys.exit("Invalid Active911 Device ID or bad network connection.")
 
-        # JID = "deivce[a91_device_id]@[domain]"
+        # Construct the JID.
         jid = "device" + self.session.cookies['a91_device_id'] + "@" + Active911Config.xmpp_domain
         password = self.session.cookies['a91_registration_code']
 
-
-        # Check the thread for an eventloop, if there is not one, create one
+        # Ensure an event loop is available.
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError as e:
@@ -107,136 +91,107 @@ class Active911(ClientXMPP):
 
         super().__init__(jid, password)
 
-
         self['feature_mechanisms'].unencrypted_plain = True
 
-        self.register_plugin('xep_0030') # Service Discovery
-        self.register_plugin('xep_0004') # Data Forms
-        self.register_plugin('xep_0060') # PubSub
-        self.register_plugin('xep_0199') # XMPP Ping
+        self.register_plugin('xep_0030')  # Service Discovery
+        self.register_plugin('xep_0004')  # Data Forms
+        self.register_plugin('xep_0060')  # PubSub
+        self.register_plugin('xep_0199')  # XMPP Ping
 
-        # Starting XMPP sessions
+        # Starting XMPP sessions.
         self.add_event_handler("session_start", self.start)
-        # Parse incoming messages
         self.add_event_handler("message", self.message)
-        # Discard Position Information
-        self.add_event_handler("position", self.position)   # Need to run api->init first
-        # Discard SSL Errors
+        self.add_event_handler("position", self.position)   # Discard position information
         self.add_event_handler("ssl_invalid_cert", self.discard)
 
     async def start(self, event):
         """
-        Handles session start event, sets presence, gets roster, and joins a conference room.
-
-        Parameters:
-        -----------
-        event : dict
-            The event data.
+        Handles session start event, sets presence, and logs the session start.
         """
-
         self.send_presence()
-        # Active911 does not provide a roster
-        # await self.get_roster(). 
         self.logger.info("XMPP Session started...")
-
 
     async def message(self, msg):
         """
         Handles incoming messages and replies with a thank-you message.
-
-        Parameters:
-        -----------
-        msg : Message
-            The incoming message object.
         """
         if msg['type'] in ('chat', 'normal'):
             alert_ids = msg['body'].split(':')
 
-            # Reguest alert from Web API
+            # Request alert from Web API.
             alert_msg = self.session.get(
                 "%s?operation=fetch_alert&message_id=%s&_=%s" %
-                    (Active911Config.access_uri, alert_ids[1], alert_ids[2]))
+                (Active911Config.access_uri, alert_ids[1], alert_ids[2]))
             alert_data = alert_msg.json()
-            
+
             self.logger.info("Message {} received.".format(alert_ids[1]))
             self.alert(alert_ids[1], alert_data)
 
     def initialize(self):
         """
-        Here we download last 10 A911 alerts
-        we may do other stuff here later
+        Downloads the last 10 A911 alerts and processes them.
         """
-        # Initialize for position reporting
-        response = self.session.get(Active911Config.initialization_uri() )
+        response = self.session.get(Active911Config.initialization_uri())
         data = json.loads(response.text)
 
         if data['result'] == 'success':
-            self.logger.info("Active911 initilized.")
+            self.logger.info("Active911 initialized.")
             alerts = data['message']['alerts']
             for idx, alert in enumerate(alerts):
-                alert_response = {'result': 'success', \
-                                    'message': alert, \
-                                    'init': True}
-                
+                alert_response = {'result': 'success', 'message': alert, 'init': True}
                 self.alert(idx, alert_response)
         else:
-            self.logger.error(f'Client initilization to Active911 failed: {data["result"]} - {data["message"]}')
-            raise Exception(f'Client initilization to Active911 failed: {data["result"]} - {data["message"]}')
-
+            err_msg = f'Client initialization to Active911 failed: {data["result"]} - {data["message"]}'
+            self.logger.error(err_msg)
+            raise Exception(err_msg)
 
     def alert(self, alert_id, alert_msg):
         """
-        This is where we do somehting with the alert.
-        This method should be implamented by the client
-        to do something with the generated alert
+        Handles alert information. This method should be implemented by the client.
         """
         self.logger.info("Alert {}:\n\n{}\n".format(alert_id, alert_msg))
 
-
-
     def position(self, loc):
         """
-        This is where we process position information... big hint...
-            we don't actually do anything here
+        Processes position information (currently just logs it).
         """
         self.logger.info(loc['from'] + " new position is " + loc['body'] + ".")
 
     def discard(self, event):
         """
-        This does nothing.  This can be called for events that we don't care about.
+        Discards events we don't care about.
         """
         return
 
     def run(self, block=True):
         """
-        Performs connection handling 
-         - If block is true (default), blocks keeps the thread alive
-                until a disconnect stanza is received or a termination
-                commaned is issued (<Ctrl> + C)
-         - If block is false  - thread does not block only use this 
-                if your're handling threading in the client
-
+        Performs connection handling using the asyncio event loop.
+         - Connects to the server, then runs the loop until interrupted.
+         - On interruption, disconnects cleanly.
         """
-        # We wrap the XMPP stuff in a try..finally clause
-        # to force the disconnect method to run if there is any error
+        loop = asyncio.get_event_loop()
         try:
-            # Connect to the XMPP server and start processing XMPP stanzas.
             self.connect(address=(Active911Config.xmpp_server, Active911Config.xmpp_port))
-            # if not self.connect(address=(Active911Config.xmpp_server, Active911Config.xmpp_port)):
+            # asyncio.get_event_loop().run_forever()
+            # connected = loop.run_until_complete(
+            #     self.connect(address=(Active911Config.xmpp_server, Active911Config.xmpp_port))
+            # )
+            # if not connected:
             #     self.logger.error("Unable to connect to Active911")
-            #     sys.exit(1) # If we can't connect, then why are we here
-
+            #     sys.exit(1)
             self.logger.info("Connected to Active911 via XMPP.")
-            self.process(forever=True)
+            # Run the event loop indefinitely.
+            loop.run_forever()
             self.logger.info("Closing XMPP connection to Active911.")
-            
+        except KeyboardInterrupt:
+            self.logger.info("KeyboardInterrupt received, disconnecting...")
         finally:
-            self.disconnect()
+            loop.run_until_complete(self.disconnect())
             self.logger.info("Disconnected from Active911.")
 
 
 if __name__ == '__main__':
     """
-    By Default we do nothing.
+    By default, the module does nothing.
     """
-    None
+    pass
