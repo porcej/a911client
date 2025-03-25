@@ -38,6 +38,11 @@ class Active911(ClientXMPP):
     session = requests.Session()
     app = None
     logger = logging
+    
+    # Add reconnection settings
+    reconnect_tries = 0
+    max_reconnect_tries = 5  # Maximum number of reconnection attempts
+    reconnect_delay = 5  # Delay in seconds between reconnection attempts
 
     def __init__(self, device_code, app=None):
         """
@@ -78,7 +83,7 @@ class Active911(ClientXMPP):
         # Construct the JID.
         jid = "device" + self.session.cookies['a91_device_id'] + "@" + Active911Config.xmpp_domain
         password = self.session.cookies['a91_registration_code']
-
+        
         # Ensure an event loop is available.
         try:
             loop = asyncio.get_event_loop()
@@ -103,6 +108,9 @@ class Active911(ClientXMPP):
         self.add_event_handler("message", self.message)
         self.add_event_handler("position", self.position)   # Discard position information
         self.add_event_handler("ssl_invalid_cert", self.discard)
+
+        # Add connection_lost handler for reconnection
+        self.add_event_handler("connection_lost", self.handle_connection_lost)
 
     async def start(self, event):
         """
@@ -144,6 +152,32 @@ class Active911(ClientXMPP):
             err_msg = f'Client initialization to Active911 failed: {data["result"]} - {data["message"]}'
             self.logger.error(err_msg)
             raise Exception(err_msg)
+
+    async def handle_connection_lost(self, event):
+        """
+        Handles connection loss events and attempts to reconnect.
+        """
+        if self.reconnect_tries < self.max_reconnect_tries:
+            self.reconnect_tries += 1
+            self.logger.warning(f"Connection lost. Attempting reconnection {self.reconnect_tries}/{self.max_reconnect_tries}")
+            
+            try:
+                # Wait before attempting reconnection
+                await asyncio.sleep(self.reconnect_delay)
+                
+                # Attempt to reconnect
+                self.connect(address=(Active911Config.xmpp_server, Active911Config.xmpp_port))
+                self.logger.info("Successfully reconnected to Active911")
+                # Run the event loop indefinitely.
+                loop.run_forever()
+                self.reconnect_tries = 0  # Reset the counter on successful reconnection
+            except Exception as e:
+                self.logger.error(f"Error during reconnection: {str(e)}")
+        else:
+            self.logger.error("Maximum reconnection attempts reached. Giving up.")
+            # You might want to raise an exception here or handle it differently
+            raise Exception("Failed to maintain connection after maximum retry attempts")
+
 
     def alert(self, alert_id, alert_msg):
         """
