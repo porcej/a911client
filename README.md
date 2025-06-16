@@ -1,136 +1,168 @@
-# a911
+# a911client
 
-A python module to act as a wrapper for Active911's XMPP interface.
+A modern Python client library for interacting with Active911's API and XMPP interface. This library provides a robust, type-safe, and async-first approach to handling Active911 alerts and communications.
 
-## Getting Started
+## Features
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+- Full support for Active911's API and XMPP interface
+- Async/await based architecture for better performance
+- Type hints and comprehensive error handling
+- Automatic reconnection and connection state management
+- JSON serialization/deserialization of alerts
+- Configurable logging
+- Support for multiple agencies and alert types
 
-### Prerequisites
+## Requirements
 
-This module is designed to work with `Python 3.6+`.  `Python 2` may work, your milage may very.  The `requirements.txt` file contains the required libraries.  
+- Python 3.8+
+- aiohttp
+- slixmpp
+- typing-extensions
 
-```
-python3.6+
+## Installation
 
-# Setup Requirements
-$ pip install setuptools wheel
-$ pip install -r requirements.txt 
-```
+```bash
+# Install from PyPI
+pip install a911client
 
-### Installation
-
-This package can be installed from github:
-
-```
-$ pip install git+https://github.com/porcej/a911client
-```
-
-### Removal
-
-
-```
-$ pip uninstall a911client
+# Or install from GitHub
+pip install git+https://github.com/porcej/a911client
 ```
 
-### Usage
+## Quick Start
 
-#### Using this module in your application
+```python
+import asyncio
+import logging
+from a911client import Active911Client, Active911Alert
 
-Import the Active911 class from the a911 module
-```
-from a911 import Active911
-```
+async def alert_handler(alert: Active911Alert):
+    """Handle incoming alerts."""
+    print(f"Received alert: {alert.description}")
+    print(f"Location: {alert.address}, {alert.city}, {alert.state}")
+    print(f"Responding units: {', '.join(alert.units)}")
 
-Build a child class of `Active911` that overides `Active911.alert(self, alert_id, alert_msg)` to process alerts as needed.
+async def main():
+    # Initialize the client
+    client = Active911Client(device_code="your-device-code")
+    
+    # Set up alert handler
+    client.alert_handler = alert_handler
+    
+    # Connect and start processing alerts
+    async with client:
+        await client.authenticate()
+        await client.active911_xmpp()
 
-```
-class Active911Client(Active911):
-    """
-    Here we override Active911 to implament a simple
-    demonstration client
-    - We are just going to pretty print the json to the screen
-    """
-    def alert(self, alert_id, alert_msg):
-        """
-        This is where we do somehting with the alert.
-        This method should be implamented using the 
-        """
-        logging.info("Alert {}:\n\n{}\n".format(alert_id, json.dumps(alert_msg)))
-```
-
-
-Initilize the client with an Active911 device id and run client.run.  In most cases block should be set to True(defualt) unless the client is handling threading.  If the client is handling threading, keep a close eye on thread locking.
-
-For most cases, a911, handles threading
-```
-    xmpp = Active911Client('XXXXXX-XXXX')
-    xmpp.run()
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(main())
 ```
 
-For the case where the client handles threading
-```
-    xmpp = Active911Client('XXXXXX-XXXX')
-    xmpp.run(block=False)
-```
+## Advanced Usage
 
+### Alert Handling
 
-### Sample applicaitons
+The `Active911Alert` class provides a rich interface for working with alerts:
 
-#### sample.py
+```python
+# Create an alert from JSON
+alert = Active911Alert.from_json(json_string)
 
-The sample applicaiton, `sample.py` demonstrates using a911 to pretty print alert data to the screen.  
+# Access alert properties
+print(f"Alert ID: {alert.id}")
+print(f"Address: {alert.address}")
+print(f"Responding Units: {alert.units}")
 
-```
-Usage: sample.py [options]
+# Convert alert to JSON
+json_data = alert.to_json()
 
-Options:
-  -h, --help                show this help message and exit
-  -q, --quiet               set logging to ERROR
-  -d, --debug               set logging to DEBUG
-  -v, --verbose             set logging to COMM
-  -a AREG, --aid=AREG       Active911 Registration ID
-```
-
-
-#### samplefile.py
-The example applicaiton, `samplefile.py` demonstrates using a911's Active911 class to save alert messages as json files in a predefined directory.
-
-```
-Usage: samplefile.py [options]
-
-Options:
-  -h, --help            show this help message and exit
-  -q, --quiet           set logging to ERROR
-  -d, --debug           set logging to DEBUG
-  -v, --verbose         set logging to COMM
-  -a AREG, --aid=AREG   Active911 Registration ID
-  -p OPATH, --path=OPATH
-                        Output directory
+# Sort alerts by timestamp
+alerts = [alert1, alert2, alert3]
+sorted_alerts = sorted(alerts)
 ```
 
+### Error Handling
 
-## Built With
+The library provides specific exception types for different error scenarios:
 
-* [wheel](https://wheel.readthedocs.io/en/stable/) - The python framework
-* [Slixmpp](https://slixmpp.readthedocs.io/en/latest/) - XMPP Library
-* [Requests](http://docs.python-requests.org/en/master/) - Request and session handling
+```python
+from a911client import (
+    Active911Error,
+    Active911ConnectionError,
+    Active911AuthenticationError
+)
+
+try:
+    await client.authenticate()
+except Active911AuthenticationError as e:
+    print(f"Authentication failed: {e}")
+except Active911ConnectionError as e:
+    print(f"Connection error: {e}")
+```
+
+### Configuration
+
+The client can be configured with various options:
+
+```python
+client = Active911Client(
+    device_code="your-device-code",
+    logger=logging.getLogger("my_app")
+)
+```
+
+## API Reference
+
+### Active911Client
+
+The main client class for interacting with Active911.
+
+```python
+class Active911Client:
+    def __init__(self, device_code: str, logger: Optional[logging.Logger] = None)
+    async def authenticate() -> None
+    async def fetch_alert(message_id: str) -> None
+    async def fetch_all_alerts() -> None
+    async def active911_xmpp() -> None
+```
+
+### Active911Alert
+
+A dataclass representing an Active911 alert.
+
+```python
+@dataclass
+class Active911Alert:
+    address: str
+    age: int
+    agency_id: int
+    agency_name: str
+    # ... other fields ...
+    
+    @classmethod
+    def from_json(cls, json_str: str) -> 'Active911Alert'
+    def to_json(self) -> str
+    def get_datetime(self) -> datetime
+```
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/porcej/cc71497a2b455f27bca8c879731e68dc) for details on our code of conduct, and the process for submitting pull requests to us.
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
-## Versioning
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/porcej/a911client/tags). 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Authors
 
 * **Joseph Porcelli** - *Initial work* - [porcej](https://github.com/porcej)
 
 See also the list of [contributors](https://github.com/porcej/a911client/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
